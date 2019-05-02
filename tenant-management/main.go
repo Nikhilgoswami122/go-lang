@@ -22,6 +22,7 @@ func main() {
 
 func handleRequests() {
 	http.HandleFunc("/signup", signup)
+	http.HandleFunc("/add/tenant", addTenant)
 	err := http.ListenAndServe(":8080", nil)
 	log.Fatal(err)
 }
@@ -49,5 +50,31 @@ func signup(w http.ResponseWriter, r *http.Request) {
 		}
 		w.Header().Set("Content-Type", "application/json")
 		_, _ = fmt.Fprintf(w, "Welcome %s!", owner.OwnerName)
+	}
+}
+
+func addTenant(w http.ResponseWriter, r *http.Request) {
+
+	if r.Method == "POST" {
+
+		data, err := ioutil.ReadAll(r.Body)
+
+		if err != nil {
+			http.Error(w, err.Error(), 500)
+			return
+		}
+
+		// Unmarshal
+		var tenant Tenant
+		errM := json.Unmarshal(data, &tenant)
+
+		// save data
+		tenantList[tenant.tenantEmail] = tenant
+
+		if errM != nil {
+			http.Error(w, errM.Error(), 500)
+		}
+		w.Header().Set("Content-Type", "application/json")
+		_, _ = fmt.Fprintf(w, "Tenant added successfuly to %s", tenant.propertyName)
 	}
 }
